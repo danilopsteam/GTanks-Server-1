@@ -23,7 +23,7 @@ class GameProtocol(protocol.Protocol):
 			self.transport.write('<cross-domain-policy><allow-access-from domain=\"*\" to-ports=\"*\"/></cross-domain-policy>')
 			self.transport.loseConnection()
 		else:
-			data = data.encode('latin-1')
+			data = u''.join(data.decode('utf8'))
 			log.msg('[r]', repr(data)) #This will show packet received
 			self.decodePacket(data)
 	
