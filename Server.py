@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-import sys
+import sys, json
 from twisted.python import log
 from twisted.internet import reactor, protocol
 
@@ -40,12 +40,60 @@ class GameProtocol(protocol.Protocol):
 	
 	def parsePacket(self, packet):
 		print '[+]', packet
+		packet = packet.split(';', 1)
+		prefix = packet[0]
+		packet = packet[1]
+		if prefix == 'system':
+			if ';' in packet:
+				command, packet = packet.split(';', 1)
+				if command == 'init_location':
+					self.language = packet
+			else:
+				pass
+		elif prefix == 'auth':
+			if ';' in packet:
+				self.username, packet = packet.split(';', 1)
+				self.password, self.remember = packet.rsplit(';', 1)
+				print self.username, self.password, self.remember
+				self.login()
+
 
 class GameClient(GameProtocol):
 	def __init__(self):
 		self.address = ''
+		self.language = ''
+
+		self.username = ''
+		self.password = ''
+		self.remember = ''
 		print 'New client created'
 
+	def login(self):
+		if self.username != self.password:
+			self.sendData('auth', 'accept')
+		data = {}
+		data['score'] = 0
+		data['name'] = self.username
+		data['tester'] = False
+		data['rating'] = 1
+		data['crystall'] = 100000
+		data['next_score'] = 100
+		data['place'] = 0
+		data['rang'] = 1
+		data['email'] = None
+		self.sendData('lobby', 'init_panel', data)
+
+	def sendData(self, *data):
+		send = ''
+		for param in data:
+			if type(param) == str:
+				send = send + param
+			elif type(param) == dict:
+				send = send + json.dumps(param)
+			else:
+				send = send + str(param)
+			send = send + ';'
+		self.transport.write(send + 'end~')
 
 class GameServer(protocol.ServerFactory):
 	def __init__(self):
@@ -53,7 +101,7 @@ class GameServer(protocol.ServerFactory):
 		self.clients = []
 if __name__ == '__main__':
 	f = GameServer()
-	reactor.listenTCP(443, f)
+	reactor.listenTCP(15050, f)
 	log.startLogging(sys.stdout)
-	log.msg('Server online on port', 443)
+	log.msg('Server online on port', 15050)
 	reactor.run()
