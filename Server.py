@@ -84,8 +84,8 @@ class GameClient(GameProtocol):
 		self.address = ''
 		self.language = ''
 
-		self.username = ''
-		self.password = ''
+		self.username = 'DaniloGarcia'
+		self.password = '123'
 		self.remember = ''
 		self.email = None
 		log.msg('New client created')
